@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.util.HashSet;
 import java.util.Vector;
 
+import lan.sahara.jsx.interfaces.ClientApiInterface;
+
 public class XServer {
 	private final Vector<Format>    _formats;	// TODO: move to "implement" class/interface
 	private final Visual            _rootVisual; // TODO: move to "implement" class/interface
@@ -23,6 +25,8 @@ public class XServer {
 
 	private ScreenView                      _screen = null;
 	
+	private final ClientApiInterface		_outClient;
+	
 	private final Vector<Client>    _clients;
 //	private final Keyboard          _keyboard;
 	
@@ -30,8 +34,9 @@ public class XServer {
     private final int                       _clientIdStep = (1 << _clientIdBits);
     private int                                     _clientIdBase = _clientIdStep;	
 	
-	public XServer (int port,String windowManagerClass) {
+	public XServer (ClientApiInterface outClient, int port,String windowManagerClass) {
 		System.err.println("Server Started");
+		_outClient = outClient;
 		_port = port;
 		_clients = new Vector<Client>();
 		_formats = new Vector<Format>();
@@ -181,7 +186,7 @@ public class XServer {
                         synchronized (this) {
                             Client          c;
                             try {
-                            	c = new Client (XServer.this, socket, _clientIdBase,_clientIdStep - 1);
+                            	c = new Client (_outClient,XServer.this, socket, _clientIdBase,_clientIdStep - 1);
                             	_clients.add (c);
                             	c.start ();
                             	_clientIdBase += _clientIdStep;

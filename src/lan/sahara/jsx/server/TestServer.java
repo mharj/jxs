@@ -1,5 +1,7 @@
 package lan.sahara.jsx.server;
 
+import lan.sahara.jsx.interfaces.LoggingClient;
+
 public class TestServer {
 	private static XServer         _xServer;
 	private static int             port = 6000;
@@ -8,7 +10,7 @@ public class TestServer {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		_xServer = new XServer (port, null);
+		_xServer = new XServer (new LoggingClient(),port, null);
 	}
 	 @Override
 	 protected void finalize() throws Throwable {
