@@ -1,9 +1,12 @@
-package lan.sahara.jsx.server;
+package lan.sahara.jxs.server;
 
 import java.io.IOException;
 import java.net.Socket;
 
-import lan.sahara.jsx.interfaces.ClientApiInterface;
+import lan.sahara.jxs.common.ErrorCode;
+import lan.sahara.jxs.common.Extension;
+import lan.sahara.jxs.common.RequestCode;
+import lan.sahara.jxs.impl.ClientApiInterface;
 
 public class Client extends Thread {
     public static final int         Destroy = 0;

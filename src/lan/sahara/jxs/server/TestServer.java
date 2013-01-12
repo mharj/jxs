@@ -1,6 +1,6 @@
-package lan.sahara.jsx.server;
+package lan.sahara.jxs.server;
 
-import lan.sahara.jsx.interfaces.LoggingClient;
+import lan.sahara.jxs.impl.LoggingClient;
 
 public class TestServer {
 	private static XServer         _xServer;

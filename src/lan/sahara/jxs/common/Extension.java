@@ -1,4 +1,4 @@
-package lan.sahara.jsx.server;
+package lan.sahara.jxs.common;
 
 public class Extension {
     private final byte              majorOpcode;
@@ -17,13 +17,13 @@ public class Extension {
             firstEvent = pfirstEvent;
             firstError = pfirstError;
     }
-    byte getMajorOpcode() {
+    public byte getMajorOpcode() {
     	return majorOpcode;
     }
-    byte getFirstEvent() {
+    public byte getFirstEvent() {
     	return firstEvent;
     }
-    byte getFirstError() {
+    public byte getFirstError() {
     	return firstError;
     }
     public String toString() {

@@ -1,4 +1,4 @@
-package lan.sahara.jsx.server;
+package lan.sahara.jxs.server;
 
 import java.io.IOException;
 

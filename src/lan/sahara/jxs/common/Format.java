@@ -1,4 +1,4 @@
-package lan.sahara.jsx.server;
+package lan.sahara.jxs.common;
 
 /**
  * This class stores details of a pixmap format.
@@ -6,6 +6,8 @@ package lan.sahara.jsx.server;
 
 
 import java.io.IOException;
+
+import lan.sahara.jxs.server.InputOutput;
 
 
 /**

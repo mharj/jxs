@@ -1,6 +1,9 @@
-package lan.sahara.jsx.server;
+package lan.sahara.jxs.common;
 
 import java.io.IOException;
+
+import lan.sahara.jxs.server.Client;
+import lan.sahara.jxs.server.InputOutput;
 
 /**
  * @author Matthew Kwan
