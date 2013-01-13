@@ -1,6 +1,8 @@
 package lan.sahara.jxs.impl;
 
-import lan.sahara.jxs.common.Geom;
+
+import java.awt.Rectangle;
+
 import lan.sahara.jxs.common.Window;
 
 public class LogClient extends AbsApiClient {
@@ -11,7 +13,7 @@ public class LogClient extends AbsApiClient {
 	}
 
 	@Override
-	public Boolean clientCreateWindow(Window window, Geom geometry) {
+	public Boolean clientCreateWindow(Window window, Rectangle geometry) {
 		// TODO Auto-generated method stub
 		return null;
 	}

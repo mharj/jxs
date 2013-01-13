@@ -1,5 +1,6 @@
 package lan.sahara.jxs.server;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Observable;
@@ -13,7 +14,6 @@ import lan.sahara.jxs.common.ErrorCode;
 import lan.sahara.jxs.common.EventCode;
 import lan.sahara.jxs.common.Extension;
 import lan.sahara.jxs.common.GContext;
-import lan.sahara.jxs.common.Geom;
 import lan.sahara.jxs.common.Property;
 import lan.sahara.jxs.common.RequestCode;
 import lan.sahara.jxs.common.Resource;
@@ -398,11 +398,11 @@ public class Client extends Thread {
 				try {
 					System.err.println("BYTES REMAINING:"+bytesRemaining);
 					Window parent_window = (Window) parent_resource;
-					Geom geom = new Geom();
-					geom.setX( _inputOutput.readShort () );	// X position.
-					geom.setY( _inputOutput.readShort () );	// Y position.
-					geom.setW( _inputOutput.readShort () );	// W size.
-					geom.setH( _inputOutput.readShort () );	// H size.
+					Rectangle geom = new Rectangle();
+					geom.x = _inputOutput.readShort ();	// X position.
+					geom.y = _inputOutput.readShort ();	// Y position.
+					geom.width = _inputOutput.readShort ();	// W size.
+					geom.height =  _inputOutput.readShort ();	// H size.
 					bytesRemaining -= 8;
 					System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") GEOM POS AND SIZE ok "+geom.toString()+", BYTES REMAINING:"+bytesRemaining);
 					int				borderWidth = _inputOutput.readShort ();	// Border width.
@@ -499,12 +499,12 @@ public class Client extends Thread {
 				_children.add (w);
 */
 				// TODO fix getSelectingClients and w.applyValues !!!
-				EventCode.sendCreateNotify (this, parent_window, w, geom.getX(), geom.getY(), geom.getW(), geom.getH(),borderWidth, w.getOverrideRedirect());
+				EventCode.sendCreateNotify (this, parent_window, w, geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
 				
 				Vector<Client>		sc = w.getSelectingClients (EventCode.MaskSubstructureNotify);
 				if (sc != null) {
 					for (Client c: sc) {
-						EventCode.sendCreateNotify (c, parent_window, w, geom.getX(), geom.getY(), geom.getW(), geom.getH(),borderWidth, w.getOverrideRedirect());
+						EventCode.sendCreateNotify (c, parent_window, w,geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
 					}
 				}
 				

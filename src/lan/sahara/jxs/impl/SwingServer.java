@@ -1,8 +1,13 @@
 package lan.sahara.jxs.impl;
 
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
+
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
 import lan.sahara.jxs.common.Extension;
 import lan.sahara.jxs.common.Font;
-import lan.sahara.jxs.common.Geom;
 
 public class SwingServer extends AbsApiServer {
 
@@ -19,9 +24,28 @@ public class SwingServer extends AbsApiServer {
 	}
 
 	@Override
-	public Geom getRootWindowSize() {
+	public Rectangle getRootWindowSize() {
 		System.out.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new Geom(0,0,200,200);
+		Rectangle bounds = new Rectangle(0,0,1024,768); // some default size
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			bounds = ge.getMaximumWindowBounds();			
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedLookAndFeelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("Root Window size:"+bounds.toString());
+		return bounds;
 	}
 
 	@Override

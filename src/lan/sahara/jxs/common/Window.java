@@ -1,5 +1,6 @@
 package lan.sahara.jxs.common;
 
+import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -80,7 +81,7 @@ public class Window extends Resource {
 	 * @param isRoot
 	 *            Is Root Window
 	 */
-	public Window(Integer resource_id, AbsApiServer ourServer, AbsApiClient ourClient, Window parent, Geom geom, int borderWidth, boolean inputOnly, boolean isRoot) {
+	public Window(Integer resource_id, AbsApiServer ourServer, AbsApiClient ourClient, Window parent, Rectangle geom, int borderWidth, boolean inputOnly, boolean isRoot) {
 		super(Resource.WINDOW, resource_id, ourServer, ourClient);
 
 		_parent = parent;

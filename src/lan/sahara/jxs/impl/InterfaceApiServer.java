@@ -1,8 +1,9 @@
 package lan.sahara.jxs.impl;
 
+import java.awt.Rectangle;
+
 import lan.sahara.jxs.common.Extension;
 import lan.sahara.jxs.common.Font;
-import lan.sahara.jxs.common.Geom;
 
 public interface InterfaceApiServer {
 	/**
@@ -20,7 +21,7 @@ public interface InterfaceApiServer {
 	 */
 	public Extension queryExtension(String extension);
 	
-	public Geom getRootWindowSize();
+	public Rectangle getRootWindowSize();
 	
 	public Font getDefaultFont();
 }

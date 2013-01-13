@@ -1,5 +1,6 @@
 package lan.sahara.jxs.impl;
 
+import java.awt.Rectangle;
 import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
@@ -10,7 +11,6 @@ import lan.sahara.jxs.common.Atom;
 import lan.sahara.jxs.common.CloseWindowResponse;
 import lan.sahara.jxs.common.EventCode;
 import lan.sahara.jxs.common.GContext;
-import lan.sahara.jxs.common.Geom;
 import lan.sahara.jxs.common.Resource;
 import lan.sahara.jxs.common.ResourceManager;
 import lan.sahara.jxs.common.Visual;
@@ -43,7 +43,7 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 	}
 	private void init() {
 		Atom.registerPredefinedAtoms(this); //load atoms to server
-		Geom rootSize = this.getRootWindowSize(); // get root size from implementation
+		Rectangle rootSize = this.getRootWindowSize(); // get root size from implementation
 		if ( rootSize == null )
 			throw new RuntimeException("No Root Window size found! (Geometry in NULL)"); // terminate whole application
 

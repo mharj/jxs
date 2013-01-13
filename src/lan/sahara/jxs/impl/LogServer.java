@@ -1,8 +1,9 @@
 package lan.sahara.jxs.impl;
 
+import java.awt.Rectangle;
+
 import lan.sahara.jxs.common.Extension;
 import lan.sahara.jxs.common.Font;
-import lan.sahara.jxs.common.Geom;
 
 public class LogServer extends AbsApiServer {
 
@@ -26,9 +27,7 @@ public class LogServer extends AbsApiServer {
 	}
 
 	@Override
-	public Geom getRootWindowSize() {
-
-		return new Geom(0,0,200,200);
+	public Rectangle getRootWindowSize() {
+		return new Rectangle(0,0,200,200);
 	}
-
 }

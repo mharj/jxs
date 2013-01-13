@@ -1,11 +1,11 @@
 package lan.sahara.jxs.impl;
 
+import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 
-import lan.sahara.jxs.common.Geom;
 import lan.sahara.jxs.common.Window;
 
 public class SwingClient extends AbsApiClient {
@@ -15,10 +15,11 @@ public class SwingClient extends AbsApiClient {
 	}
 
 	@Override
-	public Boolean clientCreateWindow(final Window window, Geom geometry) {
+	public Boolean clientCreateWindow(final Window window, Rectangle geometry) {
 		System.out.println("SwingClient: clientCreateWindow("+geometry.toString()+")");
 		JFrame frame = new JFrame("JXS Demo");
-		frame.setSize(geometry.getW(), geometry.getH());
+		
+		frame.setSize(geometry.width, geometry.height);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
 		frame.addWindowListener(new WindowAdapter() {
