@@ -2,6 +2,8 @@ package lan.sahara.jxs.server;
 
 import java.io.IOException;
 
+import lan.sahara.jxs.common.Visual;
+
 public class ScreenView {
 //	private Window                                  _rootWindow = null;
 	private final XServer                   _xServer;

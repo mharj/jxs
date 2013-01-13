@@ -1,19 +1,27 @@
 package lan.sahara.jxs.server;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Observable;
+import java.util.Observer;
 import java.util.Vector;
 
+import lan.sahara.jxs.common.CloseWindowResponse;
 import lan.sahara.jxs.common.Format;
 import lan.sahara.jxs.common.Resource;
-import lan.sahara.jxs.impl.ClientApiInterface;
+import lan.sahara.jxs.common.Visual;
+import lan.sahara.jxs.impl.AbsApiClient;
+import lan.sahara.jxs.impl.AbsApiServer;
+import lan.sahara.jxs.impl.LogClient;
 
-public class XServer {
+public class XServer implements Observer {
 	private final Vector<Format> _formats; // TODO: move to "implement"
 											// class/interface
 	private final Visual _rootVisual; // TODO: move to "implement"
@@ -31,8 +39,12 @@ public class XServer {
 	private final Hashtable<Integer, Resource> _resources;
 
 	private ScreenView _screen = null;
+	
 
-	private final ClientApiInterface _outClient;
+	public final AbsApiServer _outServer;	
+	
+//	private final ClientApiInterface _outClient;
+
 
 	private final Vector<Client> _clients;
 	// private final Keyboard _keyboard;
@@ -41,9 +53,10 @@ public class XServer {
 	private final int _clientIdStep = (1 << _clientIdBits);
 	private int _clientIdBase = _clientIdStep;
 
-	public XServer(ClientApiInterface outClient, int port, String windowManagerClass) {
+	public XServer(AbsApiServer outServer, int port, String windowManagerClass) throws IllegalAccessException {
+		outServer.addObserver(this);
 		System.err.println("Server Started");
-		_outClient = outClient;
+		_outServer = outServer;
 		_port = port;
 		_resources = new Hashtable<Integer, Resource>();
 		_clients = new Vector<Client>();
@@ -186,7 +199,8 @@ public class XServer {
 		 * Run the thread.
 		 */
 		public void run() {
-			System.err.println("Thread Started");
+			System.err.println("Thread run()");
+			
 			while (true) {
 				Socket socket = null;
 				try {
@@ -201,7 +215,8 @@ public class XServer {
 				synchronized (this) {
 					Client c;
 					try {
-						c = new Client(_outClient, XServer.this, socket, _clientIdBase, _clientIdStep - 1);
+						AbsApiClient outClient = _outServer._createClient(_clientIdBase,_clientIdStep - 1);
+						c = new Client(_outServer,outClient, XServer.this, socket, _clientIdBase, _clientIdStep - 1);
 						_clients.add(c);
 						c.start();
 						_clientIdBase += _clientIdStep;
@@ -220,12 +235,22 @@ public class XServer {
 		 * Cancel the thread.
 		 */
 		public void cancel() {
+			System.err.println("Thread cancel()");
 			try {
 				_serverSocket.close();
 			} catch (IOException e) {
 				// do nothing
 			}
 		}
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+        if (arg instanceof CloseWindowResponse) {
+        	CloseWindowResponse resp = (CloseWindowResponse) arg;
+            System.out.println("XSERVER EVENT CODE: " + resp.getEventCode() );
+        }
+		
 	}
 
 }

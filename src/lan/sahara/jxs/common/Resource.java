@@ -2,6 +2,8 @@ package lan.sahara.jxs.common;
 
 import java.io.IOException;
 
+import lan.sahara.jxs.impl.AbsApiClient;
+import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.server.Client;
 import lan.sahara.jxs.server.XServer;
 
@@ -19,24 +21,24 @@ public class Resource {
 	public static final int COLORMAP = 6;
 
 	private final int _type;
-	protected final int _id;
-	protected final XServer _xServer;
-	protected Client _client;
+	protected final Integer _resource_id;
+	protected final AbsApiServer _ourServer;
+	protected final AbsApiClient _ourClient;
 	private int _closeDownMode = Client.Destroy;
 
 	/**
 	 * Constructor.
 	 * 
 	 * @param type The resource type.
-	 * @param id The resource ID.
+	 * @param id The resource ID. (ID done with ResourceManager)
 	 * @param xServer The X server.
 	 * @param client The client issuing the request.
 	 */
-	protected Resource(int type, int id, XServer xServer, Client client) {
+	protected Resource(int type, Integer resource_id,AbsApiServer ourServer,AbsApiClient ourClient) {		
 		_type = type;
-		_id = id;
-		_xServer = xServer;
-		_client = client;
+		_resource_id = resource_id;
+		_ourServer = ourServer;
+		_ourClient = ourClient;
 	}
 
 	/**
@@ -53,8 +55,8 @@ public class Resource {
 	 * 
 	 * @return The resource ID.
 	 */
-	public int getId() {
-		return _id;
+	public Integer getId() {
+		return _resource_id;
 	}
 
 	/**
@@ -62,9 +64,9 @@ public class Resource {
 	 * 
 	 * @return The client that created the resource.
 	 */
-	public Client getClient() {
+/*	public Client getClient() {
 		return _client;
-	}
+	}*/
 
 	/**
 	 * Return the resource's close down mode.
@@ -108,7 +110,7 @@ public class Resource {
 	 * override this function to handle object-specific removals.
 	 */
 	public void delete() {
-		_xServer.freeResource(_id);
+		_ourServer.freeResource(this);
 	}
 
 	/**
