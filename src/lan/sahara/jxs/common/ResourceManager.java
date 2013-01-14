@@ -21,7 +21,7 @@ public class ResourceManager {
 			}
 			for ( int i=1; i< Integer.MAX_VALUE; i++ ) {
 				if ( ! resourceMap.keySet().contains(i) ) {
-					System.out.println("Added Resource = "+resource_id+" (Class:"+r.getClass().getSimpleName()+") Next free resource id = "+i);
+//					System.out.println("Added Resource = "+resource_id+" (Class:"+r.getClass().getSimpleName()+") Next free resource id = "+i);
 					firstFree = i;
 					break;
 				}
@@ -44,7 +44,7 @@ public class ResourceManager {
 			}
 			for ( int i=1; i < Integer.MAX_VALUE; i++ ) {
 				if ( ! resourceMap.keySet().contains(i) ) {
-					System.out.println("Deleted Resource = "+resource_id+" Next free resource id = "+i);
+//					System.out.println("Deleted Resource = "+resource_id+" Next free resource id = "+i);
 					firstFree = i;
 					break;
 				}
@@ -61,7 +61,7 @@ public class ResourceManager {
 			}
 			for ( int i=1; i < Integer.MAX_VALUE; i++ ) {
 				if ( ! resourceMap.keySet().contains(i) ) {
-					System.out.println("Deleted Resource = "+id+" Next free resource id = "+i);
+//					System.out.println("Deleted Resource = "+id+" Next free resource id = "+i);
 					firstFree = i;
 					break;
 				}

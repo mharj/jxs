@@ -88,7 +88,15 @@ public class EventCode {
 		io.writeByte((byte) arg);
 		io.writeShort((short) (client.getSequenceNumber() & 0xffff));
 	}
-
+	
+	private static void writeHeader(InputOutput inputOutput,int sequenceNumber, byte code, int arg) throws IOException {
+		inputOutput.writeByte((byte) code);
+		inputOutput.writeByte((byte) arg);
+		inputOutput.writeShort((short) ( sequenceNumber & 0xffff));
+	}
+	
+	
+	
 	/**
 	 * Send a key press event.
 	 * 
@@ -630,7 +638,7 @@ public class EventCode {
 	 */
 	public static void sendCreateNotify(Client client, Window parent, Window window, int x, int y, int width, int height, int borderWidth, boolean overrideRedirect) throws IOException {
 		InputOutput io = client.getInputOutput();
-		System.err.println("SendCreateNotify: [Parent: "+parent.getId()+" Window: "+window.getId()+"]");
+		System.out.println("Reply: SendCreateNotify:(Window: "+window.getId()+" Parent: "+parent.getId()+")");
 		synchronized (io) {
 			writeHeader(client, CreateNotify, 0);
 			io.writeInt(parent.getId()); // Parent.
@@ -1006,6 +1014,20 @@ public class EventCode {
 		}
 		io.flush();
 	}
+	
+	public static void sendPropertyNotify(InputOutput inputOutput,int sequenceNumber, Window window, Atom atom, int timestamp, int state) throws IOException {
+
+		System.err.println("SendPropertyNotify [Window:"+window.getId()+"]");
+		synchronized (inputOutput) {
+			writeHeader(inputOutput,sequenceNumber, PropertyNotify, 0);
+			inputOutput.writeInt(window.getId()); // Window.
+			inputOutput.writeInt(atom.getId()); // Atom.
+			inputOutput.writeInt(timestamp); // Time.
+			inputOutput.writeByte((byte) state); // State.
+			inputOutput.writePadBytes(15); // Unused.
+		}
+		inputOutput.flush();
+	}	
 
 	/**
 	 * Send a selection clear event.

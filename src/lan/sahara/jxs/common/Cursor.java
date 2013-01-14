@@ -18,8 +18,8 @@ public class Cursor extends Resource {
 		)
 */	
 
-	protected Cursor(Integer resource_id,AbsApiServer ourServer, AbsApiClient ourClient) {
-		super(Resource.CURSOR, resource_id,ourServer, ourClient);
+	protected Cursor(Integer resource_id) {
+		super(Resource.CURSOR, resource_id);
 		// TODO Auto-generated constructor stub
 	}
 

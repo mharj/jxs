@@ -15,6 +15,7 @@ import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.server.Client;
 
 public class Window extends Resource {
+
 	private Window _parent;	
 	private int _eventMask = 0;
 	private final Hashtable<Client, Integer> _clientMasks;
@@ -22,7 +23,7 @@ public class Window extends Resource {
 	private final Hashtable<Integer, Property>	_properties;	
 	
 	private boolean _overrideRedirect;
-	private final boolean _inputOnly;
+	public final boolean _inputOnly;
 	private final int _borderWidth;
 	private final boolean _isRoot;
 	private boolean _isMapped = false;
@@ -66,25 +67,17 @@ public class Window extends Resource {
 	private static final int WinGravityStatic = 10;
 
 	/**
-	 * @param resource_id
-	 *            Resource ID
-	 * @param ourServer
-	 *            Current Server
-	 * @param ourClient
-	 *            Current Client socket
-	 * @param parent
-	 *            Parent Resource ID
-	 * @param geom
-	 *            Geometry [x*y+w+h]
-	 * @param borderWidth
-	 *            Border Width
-	 * @param inputOnly
-	 *            Input only
-	 * @param isRoot
-	 *            Is Root Window
+	 * @param resource_id Resource ID
+	 * @param ourServer Current Server
+	 * @param ourClient Current Client socket
+	 * @param parent Parent Resource ID
+	 * @param geom Rectangle geometry
+	 * @param borderWidth Border Width
+	 * @param inputOnly Input only
+	 * @param isRoot Is Root Window
 	 */
-	public Window(Integer resource_id, AbsApiServer ourServer, AbsApiClient ourClient, Window parent, Rectangle geom, int borderWidth, boolean inputOnly, boolean isRoot) {
-		super(Resource.WINDOW, resource_id, ourServer, ourClient);
+	public Window(Integer resource_id,Window parent, Rectangle geom, int borderWidth, boolean inputOnly, boolean isRoot) {
+		super(Resource.WINDOW, resource_id);
 
 		_parent = parent;
 		_inputOnly = inputOnly;
@@ -149,7 +142,6 @@ public class Window extends Resource {
 	}
 
 	public boolean applyValues(Client client, byte opcode, int mask) throws IOException {
-		System.err.println("attr_values:"+getMaskNameValues());
 		boolean ok = true;
 /*		
 		if ((mask & (1 << AttrBackgroundPixmap)) != 0) {
@@ -200,7 +192,7 @@ public class Window extends Resource {
 */
 		if ((mask & (1 << AttrEventMask)) != 0) {
 			_clientMasks.put(client, _attributes[AttrEventMask]);
-			System.err.println("for Client store AttrEventMask = " + _attributes[AttrEventMask]);
+//			System.err.println("for Client store AttrEventMask = " + _attributes[AttrEventMask]);
 			Set<Client> sc = _clientMasks.keySet();
 
 			_eventMask = 0;
@@ -236,7 +228,7 @@ public class Window extends Resource {
 	}
 
 	public void setAttribute(int type, int value) {
-		System.out.println("Window.setAttribute "+getAttributeName(type)+"="+value);
+//		System.out.println("Window.setAttribute "+getAttributeName(type)+"="+value);
 		_attributes[type] = value;
 	}
 	public int getAttribute(int type) {

@@ -22,8 +22,6 @@ public class Resource {
 
 	private final int _type;
 	protected final Integer _resource_id;
-	protected final AbsApiServer _ourServer;
-	protected final AbsApiClient _ourClient;
 	private int _closeDownMode = Client.Destroy;
 
 	/**
@@ -34,11 +32,9 @@ public class Resource {
 	 * @param xServer The X server.
 	 * @param client The client issuing the request.
 	 */
-	protected Resource(int type, Integer resource_id,AbsApiServer ourServer,AbsApiClient ourClient) {		
+	protected Resource(int type, Integer resource_id) {		
 		_type = type;
 		_resource_id = resource_id;
-		_ourServer = ourServer;
-		_ourClient = ourClient;
 	}
 
 	/**
@@ -109,10 +105,11 @@ public class Resource {
 	 * Destroy the resource. Remove it from the X server's resources, and
 	 * override this function to handle object-specific removals.
 	 */
+/*	
 	public void delete() {
 		_ourServer.freeResource(this);
 	}
-
+*/
 	/**
 	 * Process an X request relating to this resource. This is a fallback
 	 * function that does nothing.

@@ -12,7 +12,7 @@ public interface InterfaceApiServer {
 	 * @param clientIdStep
 	 * @return implementation client
 	 */
-	public AbsApiClient createClient(int clientIdBase,int clientIdStep);
+	public AbsApiClient createClient();
 	
 	/**
 	 * Check extensions

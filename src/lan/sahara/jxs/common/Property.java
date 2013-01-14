@@ -22,8 +22,7 @@ public class Property {
 	/**
 	 * Constructor.
 	 * 
-	 * @param p
-	 *            The property to copy.
+	 * @param p The property to copy.
 	 */
 	private Property(final Property p) {
 		_id = p._id;

@@ -2,6 +2,8 @@ package lan.sahara.jxs.common;
 
 import java.io.IOException;
 
+
+
 import lan.sahara.jxs.impl.AbsApiClient;
 import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.server.Client;
@@ -10,8 +12,10 @@ import lan.sahara.jxs.server.XServer;
 
 
 public class GContext extends Resource {
+	private final int		_parent;
+	private Font			_font = null;
 	private int[]			_attributes;
-	private int				_parent;
+
 	
 	public static final int	AttrFunction = 0;
 	public static final int	AttrPlaneMask = 1;
@@ -45,10 +49,9 @@ public class GContext extends Resource {
 	 * @param id	The ID of the GContext to create.
 	 * @param bytesRemaining	Bytes yet to be read in the request.
 	 * @throws IOException
-	 */	
-	public GContext(Integer resource_id,Integer parent_id,AbsApiServer ourServer,AbsApiClient ourClient) {
-		super(Resource.GCONTEXT,resource_id,ourServer, ourClient);
-//		super(type, id, xServer);
+	 */
+	public GContext(Integer resource_id,Integer parent_id) {	
+		super(Resource.GCONTEXT,resource_id);
 		_parent = parent_id;
 		_attributes = new int[] {
 				3,	// function = Copy
@@ -77,7 +80,7 @@ public class GContext extends Resource {
 		};		
 	}
 	public void setAttribute(int maskBit,int value) {
-		System.out.println("GContext setAttribute :"+getAttributeName(maskBit)+"="+value);
+//		System.out.println("GContext setAttribute :"+getAttributeName(maskBit)+"="+value);
 		_attributes[maskBit] = value;
 	}
 	public int getAttribute(int maskBit) {

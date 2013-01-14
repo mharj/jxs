@@ -37,4 +37,10 @@ public class Util {
 		io.writeByte(arg);
 		io.writeShort(sn);
 	}
+	public static void writeReplyHeader(InputOutput inputOutput,int sequenceNumber, byte arg) throws IOException {
+		short sn = (short) (sequenceNumber & 0xffff);
+		inputOutput.writeByte((byte) 1); // Reply.
+		inputOutput.writeByte(arg);
+		inputOutput.writeShort(sn);
+	}	
 }

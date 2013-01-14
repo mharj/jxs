@@ -8,9 +8,9 @@ import lan.sahara.jxs.common.Font;
 public class LogServer extends AbsApiServer {
 
 	@Override
-	public AbsApiClient createClient(int clientIdBase, int clientIdStep) {
+	public AbsApiClient createClient() {
 		System.out.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new LogClient(clientIdBase,clientIdStep);
+		return new LogClient();
 	}
 
 	@Override
@@ -23,7 +23,7 @@ public class LogServer extends AbsApiServer {
 	@Override
 	public Font getDefaultFont() {
 		System.out.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new Font(null,"", this, null);
+		return new Font(null,"");
 	}
 
 	@Override

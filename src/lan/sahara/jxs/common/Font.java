@@ -9,10 +9,8 @@ public class Font extends Resource {
 	/**
 	 * @param resource_id Resource Id
 	 * @param name Font Name
-	 * @param ourServer current server
-	 * @param ourClient current client
 	 */
-	public Font (Integer resource_id,String name,AbsApiServer ourServer,AbsApiClient ourClient) {
-		super(Resource.FONT, resource_id, ourServer, ourClient);
+	public Font (Integer resource_id,String name) {
+		super(Resource.FONT, resource_id);
 	}
 }

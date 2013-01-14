@@ -8,8 +8,8 @@ import lan.sahara.jxs.common.Window;
 
 public class LogClient extends AbsApiClient {
 
-	public LogClient(int resourceIdBase, int resourceIdMask) {
-		super(resourceIdBase, resourceIdMask);
+	public LogClient() {
+		super();
 		// TODO Auto-generated constructor stub
 	}
 

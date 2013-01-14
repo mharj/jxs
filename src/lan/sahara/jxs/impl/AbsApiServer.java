@@ -18,7 +18,9 @@ import lan.sahara.jxs.common.Window;
 
 @SuppressWarnings("unused")
 public abstract class AbsApiServer extends Observable implements InterfaceApiServer,Observer  {
-
+	public int _sequenceNumber = 0;
+	public Integer				_resourceIdBase = null;
+	public Integer				_resourceIdMask = null;	
 	
 	private long				_timestamp;
 	private final ResourceManager 				resourceMgmr		= new ResourceManager();
@@ -39,7 +41,7 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 	
 	public AbsApiServer(String windowManagerClass) {
 		setWindowManagerClass(windowManagerClass);
-		
+		init();		
 	}
 	private void init() {
 		Atom.registerPredefinedAtoms(this); //load atoms to server
@@ -47,13 +49,16 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 		if ( rootSize == null )
 			throw new RuntimeException("No Root Window size found! (Geometry in NULL)"); // terminate whole application
 
-		_rootWindow = new Window(1,this, null, null,rootSize,0,false,true);
+		_rootWindow = new Window(1,null,rootSize,0,false,true);
 		addResource(_rootWindow);
 		addResource(this.getDefaultFont());
 		
 		_timestamp = System.currentTimeMillis ();
 	}
-	
+	public void setResourceBaseMask(int resourceIdBase,int resourceIdMask) {
+		_resourceIdBase = resourceIdBase;
+		_resourceIdMask = resourceIdMask;		
+	}
 	public void setWindowManagerClass(String windowManagerClass) {
 		_windowManagerClass = windowManagerClass;
 	}
@@ -62,8 +67,8 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 		return _windowManagerClass;
 	}
 
-	public AbsApiClient _createClient(int clientIdBase,int clientIdStep) throws RuntimeException {
-		AbsApiClient client = createClient(clientIdBase,clientIdStep); // use interface to get final implementation
+	public AbsApiClient _createClient() throws RuntimeException {
+		AbsApiClient client = createClient(); // use interface to get final implementation
 		if ( client == null )
 			throw new RuntimeException("No output Client implementation found!"); // terminate whole application
 		client.addObserver(this);
@@ -80,15 +85,14 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 	public boolean resourceExists (int resource_id) {
 		return resourceMgmr.containsKey (resource_id);
 	}
-	
+/*	
 	public boolean validResourceId (int cid,int resourceIdMask,int resourceIdBase) {
 		return ((cid & ~resourceIdMask) == resourceIdBase && ! resourceExists(cid) );
 	}
-	
-	public boolean validResourceId (int cid,AbsApiClient client) {
-		return ((cid & ~client.getResourceIdMask()) == client.getResourceIdBase() && ! resourceExists(cid) );
+*/	
+	public boolean validResourceId (int id) {
+		return ( (id & ~_resourceIdMask) == _resourceIdBase && ! this.resourceExists (id));
 	}
-
 
 
 	public void addAtom(Atom atom) {
@@ -127,7 +131,7 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 	}
 	
 	public void addResource(Resource resource) {
-		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
+		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName()+" ID:"+resource.getId());
 		resourceMgmr.addResource(resource);
 	}
 	public Integer getResourceId(Resource resource) {

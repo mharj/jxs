@@ -220,8 +220,7 @@ public class XServer implements Observer {
 				synchronized (this) {
 					Client c;
 					try {
-						AbsApiClient outClient = _outServer._createClient(_clientIdBase,_clientIdStep - 1);
-						c = new Client(_outServer,outClient, XServer.this, socket, _clientIdBase, _clientIdStep - 1);
+						c = new Client(_outServer,_outServer._createClient(), XServer.this, socket, _clientIdBase, _clientIdStep - 1);
 						_clients.add(c);
 						c.start();
 						_clientIdBase += _clientIdStep;

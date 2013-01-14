@@ -43,6 +43,11 @@ public class ErrorCode {
 		System.err.println("ErrorCode: " + getErrorName(error) + " resourceId:" + resourceId);
 		writeWithMinorOpcode(client, error, (short) 0, opcode, resourceId);
 	}
+	
+	public static void write(InputOutput inputOutput,int sequenceNumber,byte error, byte opcode, int resourceId) throws IOException {
+		System.err.println("ErrorCode: " + getErrorName(error) + " resourceId:" + resourceId);
+		writeWithMinorOpcode(inputOutput,sequenceNumber,error, (short) 0, opcode, resourceId);
+	}	
 
 	/**
 	 * Write an X error with a minor opcode specified.
@@ -69,6 +74,20 @@ public class ErrorCode {
 		}
 		io.flush();
 	}
+	
+	public static void writeWithMinorOpcode(InputOutput inputOutput,int sequenceNumber, byte error, short minorOpcode, byte opcode, int resourceId) throws IOException {
+		short sn = (short) (sequenceNumber & 0xffff);
+		synchronized (inputOutput) {
+			inputOutput.writeByte((byte) 0); // Indicates an error.
+			inputOutput.writeByte(error); // Error code.
+			inputOutput.writeShort(sn); // Sequence number.
+			inputOutput.writeInt(resourceId); // Bad resource ID.
+			inputOutput.writeShort(minorOpcode); // Minor opcode.
+			inputOutput.writeByte(opcode); // Major opcode.
+			inputOutput.writePadBytes(21); // Unused.
+		}
+		inputOutput.flush();
+	}	
 
 	private static String getErrorName(int error) {
 		switch (error) {

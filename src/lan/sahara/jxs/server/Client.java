@@ -22,6 +22,9 @@ import lan.sahara.jxs.common.Resource;
 import lan.sahara.jxs.common.Window;
 import lan.sahara.jxs.impl.AbsApiClient;
 import lan.sahara.jxs.impl.AbsApiServer;
+import lan.sahara.jxs.protocol.CreateGC;
+import lan.sahara.jxs.protocol.GetProperty;
+import lan.sahara.jxs.protocol.QueryExtension;
 
 public class Client extends Thread {
 	static Logger logger = Logger.getLogger(Client.class.getName());
@@ -34,10 +37,8 @@ public class Client extends Thread {
     private final XServer                   _xServer;
     private final Socket                    _socket;
     private final InputOutput               _inputOutput;
-    private final int                               _resourceIdBase;
-    private final int                               _resourceIdMask;
 //    private final Vector<Resource>  _resources;
-//    private int                                             _sequenceNumber = 0;
+
     private boolean _closeConnection = false;
     private boolean _isConnected = true;
     private int _closeDownMode = Destroy;	
@@ -45,12 +46,11 @@ public class Client extends Thread {
 	public Client(AbsApiServer ourServer,AbsApiClient ourClient,XServer xserver,Socket socket,int resourceIdBase,int resourceIdMask)  throws IOException {
 		logger.info("constructor("+socket.getRemoteSocketAddress().toString()+")");
 		_ourServer = ourServer;
+		_ourServer.setResourceBaseMask(resourceIdBase,resourceIdMask);
 		_ourClient = ourClient;
         _xServer = xserver;
         _socket = socket;
         _inputOutput = new InputOutput (socket);
-        _resourceIdBase = resourceIdBase;
-        _resourceIdMask = resourceIdMask;
 //        _resources = new Vector<Resource>();
 	}
 
@@ -141,8 +141,8 @@ public class Client extends Thread {
                     _inputOutput.writeShort (_xServer.ProtocolMinorVersion);
                     _inputOutput.writeShort ((short) extra);        // Length of data.
                     _inputOutput.writeInt (_xServer.ReleaseNumber); // Release number.
-                    _inputOutput.writeInt (_resourceIdBase);
-                    _inputOutput.writeInt (_resourceIdMask);
+                    _inputOutput.writeInt (_ourServer._resourceIdBase);
+                    _inputOutput.writeInt (_ourServer._resourceIdMask);
                     _inputOutput.writeInt (0);              // Motion buffer size.
                     _inputOutput.writeShort ((short) vendor.length);        // Vendor length.
                     _inputOutput.writeShort ((short) 0x7fff);       // Max request length.
@@ -154,8 +154,8 @@ public class Client extends Thread {
                     _inputOutput.writeByte ((byte) 8);      // Bitmap format scanline pad.
                     _inputOutput.writeByte ((byte) 8);		// min key code
                     _inputOutput.writeByte ((byte) 255); 	// max key code
-//                    _inputOutput.writeByte ((byte) kb.getMinimumKeycode ());
-//                    _inputOutput.writeByte ((byte) kb.getMaximumKeycode ());
+//                   _inputOutput.writeByte ((byte) kb.getMinimumKeycode ());
+//                   _inputOutput.writeByte ((byte) kb.getMaximumKeycode ());
                     _inputOutput.writePadBytes (4); // Unused.
 
                     if (vendor.length > 0) {        // Write padded vendor string.
@@ -201,7 +201,7 @@ public class Client extends Thread {
      * @throws IOException
      */
     private void processRequest (byte opcode,byte arg,int bytesRemaining) throws IOException {
-    		_ourClient._sequenceNumber++;
+    		_ourServer._sequenceNumber++;
             switch (opcode) {
                     case RequestCode.CreateWindow:reqCreateWindow(this,bytesRemaining);break;
                     case RequestCode.ChangeWindowAttributes:reqChangeWindowAttributes(this,bytesRemaining);break;
@@ -219,7 +219,9 @@ public class Client extends Thread {
                     case RequestCode.QueryTree:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.ChangeProperty:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.DeleteProperty:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.GetProperty:reqGetProperty(this,false,bytesRemaining);break;
+                    case RequestCode.GetProperty:
+                    	GetProperty.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer, _ourClient.properties);
+                    	break;
                     case RequestCode.ListProperties:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryPointer:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.GetMotionEvents:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -280,7 +282,14 @@ public class Client extends Thread {
                     case RequestCode.GetFontPath:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.CreatePixmap:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.FreePixmap:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.CreateGC:reqCreateGC(this,bytesRemaining);break;
+                    case RequestCode.CreateGC:
+                    	GContext gcontext = CreateGC.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer, _ourClient);
+                    	if ( gcontext != null) {
+                    		_ourServer.addResource(gcontext);
+                    		_ourClient.addResource(gcontext);
+                    	}
+//                    	reqCreateGC(this,bytesRemaining);
+                    	break;
                     case RequestCode.ChangeGC:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.CopyGC:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.SetDashes:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -304,7 +313,13 @@ public class Client extends Thread {
                     case RequestCode.CreateGlyphCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.FreeCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.RecolorCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.QueryExtension:reqQueryExtension(this,bytesRemaining);break;
+                    case RequestCode.QueryExtension:
+                    	String extension = QueryExtension.query(arg,bytesRemaining,_inputOutput,_ourServer._sequenceNumber);
+                    	if ( extension != null ) {
+                    		Extension e =_ourServer.queryExtension(extension);
+                    		QueryExtension.reply(e, _inputOutput, _ourServer._sequenceNumber);
+                    	}
+                    break;
                     case RequestCode.ListExtensions:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryKeymap:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.ChangeKeyboardMapping:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -370,7 +385,41 @@ public class Client extends Thread {
 				_inputOutput.readSkip (bytesRemaining);
 				ErrorCode.write (this, ErrorCode.Window, RequestCode.ChangeWindowAttributes, id);
 			} else {
+				Window w = (Window) r;
 				int	valueMask = _inputOutput.readInt ();	// Value mask.
+				bytesRemaining -= 4;
+				int			n = Util.bitcount (valueMask);
+				if (bytesRemaining != n * 4) {
+					_inputOutput.readSkip (bytesRemaining);
+					ErrorCode.write (client, ErrorCode.Length, RequestCode.ChangeWindowAttributes, 0);
+					return;
+				}
+				for (int i = 0; i < 15; i++) {
+					if ((valueMask & (1 << i)) != 0) {
+						switch (i) {
+							case Window.AttrBackgroundPixmap:
+							case Window.AttrBackgroundPixel:
+							case Window.AttrBorderPixmap:
+							case Window.AttrBorderPixel:
+							case Window.AttrBackingPlanes:
+							case Window.AttrBackingPixel:
+							case Window.AttrEventMask:
+							case Window.AttrDoNotPropagateMask:
+							case Window.AttrColormap:
+							case Window.AttrCursor:
+								w.setAttribute(i, _inputOutput.readInt() );
+								break;
+							case Window.AttrBitGravity:
+							case Window.AttrWinGravity:
+							case Window.AttrBackingStore:
+							case Window.AttrOverrideRedirect:
+							case Window.AttrSaveUnder:
+								w.setAttribute(i, _inputOutput.readByte() );
+								_inputOutput.readSkip (3);
+								break;
+						}
+					}
+				}
 
 			}
 		}
@@ -386,7 +435,7 @@ public class Client extends Thread {
 			if ( parent_id > 1 ) // TODO: change ResourceManager!!
 				parent_id -=1;
 			Resource	parent_resource = _ourServer.getResource (parent_id);
-			System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+")");
+			
 			bytesRemaining -= 8;
 			
 			// TODO: check mask thing like in AbsApiServer.validResourceId
@@ -419,10 +468,14 @@ public class Client extends Thread {
 						inputOnly = false;
 					else
 						inputOnly = true;
+					
+					System.err.println("Request: CreateWindow(ID:"+window_id+" Parent:"+parent_id+" "+geom.toString()+")");
+					// TODO: check and add all values to Window !!!
+					// TODO: create "Window" first and directly add values to Class instead of monster constructor !!
 					// create window
 					Window			w = null;
 					try {
-						w = new Window (window_id,_ourServer,_ourClient,parent_window,geom,borderWidth,inputOnly,false);
+						w = new Window (window_id,parent_window,geom,borderWidth,inputOnly,false);
 					} catch (OutOfMemoryError e) {
 						_inputOutput.readSkip (bytesRemaining);
 						ErrorCode.write (client, ErrorCode.Alloc,RequestCode.CreateWindow, 0);
@@ -443,7 +496,6 @@ public class Client extends Thread {
 					}
 					for (int i = 0; i < 15; i++) {
 						if ((valueMask & (1 << i)) != 0) {
-							System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") Value Type:"+i);
 							switch (i) {
 								case Window.AttrBackgroundPixmap:
 								case Window.AttrBackgroundPixel:
@@ -504,263 +556,6 @@ public class Client extends Thread {
 			}
 		}    	
     }
-    
-    /**
-     * The XCreateGC() function creates a graphics context and returns a GC
-     * op_code: 55 
-     * TODO: check GContext.java for parser and build similar with logging and pass to interface
-     * @param client
-     * @param bytesRemaining
-     * @throws IOException
-     */
-    private void reqCreateGC(Client client,int bytesRemaining) throws IOException {
-    	
-        if (bytesRemaining < 12) {
-        	_inputOutput.readSkip (bytesRemaining);
-            ErrorCode.write (this, ErrorCode.Length, RequestCode.CreateGC, 0);
-        } else {
-            int	cid = 	 _inputOutput.readInt ();  		 // GContext ID.
-            int	drawable = _inputOutput.readInt ();		 // Drawable ID.
-            bytesRemaining -= 8;
-            System.err.println("req: CreateGC(ID:"+cid+" Parent:"+drawable+")");
-            Resource r = _ourServer.getResource (drawable);
-            if (! _ourServer.validResourceId (cid,_ourClient) ) {
-            	_inputOutput.readSkip (bytesRemaining);
-                ErrorCode.write (this, ErrorCode.IDChoice, RequestCode.CreateGC, cid);
-            	
-            } else if (r == null || ! r.isDrawable ()) {
-                _inputOutput.readSkip (bytesRemaining);
-                ErrorCode.write (this, ErrorCode.Drawable, RequestCode.CreateGC, drawable);            	
-            } else {
-            	GContext gc = new GContext(cid,drawable,_ourServer,_ourClient);
-                if (bytesRemaining < 4) {
-                	_inputOutput.readSkip (bytesRemaining);
-                    ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateGC, 0);
-                    return;
-                }
-                // read mask
-                int valueMask = _inputOutput.readInt ();      // Value mask.
-            	int n = Util.bitcount (valueMask);
-            	bytesRemaining -= 4;
-                if (bytesRemaining != n * 4) {
-                	_inputOutput.readSkip (bytesRemaining);
-                	ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateGC, 0);
-                    return;
-                }
-                // loop values
-                for (int i = 0; i < 23; i++) {
-                    if ((valueMask & (1 << i)) != 0) {
-                    	switch (i) {
-                        	case GContext.AttrFunction:
-                        	case GContext.AttrLineStyle:
-                        	case GContext.AttrCapStyle:
-                        	case GContext.AttrJoinStyle:
-                        	case GContext.AttrFillStyle:
-                        	case GContext.AttrFillRule:
-                        	case GContext.AttrSubwindowMode:
-                        	case GContext.AttrGraphicsExposures:
-                        	case GContext.AttrDashes:
-                        	case GContext.AttrArcMode:
-                        		gc.setAttribute(i, _inputOutput.readByte () );
-                        		_inputOutput.readSkip (3);
-                        		break;
-                        	case GContext.AttrPlaneMask:
-                        	case GContext.AttrForeground:
-                        	case GContext.AttrBackground:
-                        	case GContext.AttrTile:
-                        	case GContext.AttrStipple:
-                        	case GContext.AttrFont:
-                        	case GContext.AttrClipMask:
-                        		gc.setAttribute(i, _inputOutput.readInt () );
-                                break;
-                        	case GContext.AttrLineWidth:
-                        	case GContext.AttrDashOffset:
-                        		gc.setAttribute(i, _inputOutput.readShort () );
-                        		_inputOutput.readSkip (2);
-                                break;
-                        	case GContext.AttrTileStippleXOrigin:
-                        	case GContext.AttrTileStippleYOrigin:
-                        	case GContext.AttrClipXOrigin:
-                        	case GContext.AttrClipYOrigin:
-                        		gc.setAttribute(i, (short) _inputOutput.readShort () );
-                        		_inputOutput.readSkip (2);
-                                break;
-                    	}
-                    }
-                }
-                _ourServer.addResource(gc);
-        		_ourClient.addResource(gc);
-            }
-        }    	
-    }
-    
-    private void reqGetProperty(Client client,boolean delete,int bytesRemaining) throws IOException {
-    	bytesRemaining -= 4;
-    	if (bytesRemaining  != 16 ) {
-    		_inputOutput.readSkip (bytesRemaining);
-			ErrorCode.write (this, ErrorCode.Length, RequestCode.GetProperty, 0);
-			return;
-		} else {
-			int			window_id = _inputOutput.readInt ();	// Property.
-			int			pid = _inputOutput.readInt ();	// Property.
-			int			tid = _inputOutput.readInt ();	// Type.
-			int			longOffset = _inputOutput.readInt ();	// Long offset.
-			int			longLength = _inputOutput.readInt ();	// Long length.
-			Atom		property = _ourServer.getAtom (pid);
-
-			if (property == null) {
-				ErrorCode.write (client, ErrorCode.Atom,RequestCode.GetProperty, pid);
-				return;
-			} else if (tid != 0 && ! _ourServer.atomExists (tid)) {
-				ErrorCode.write (client, ErrorCode.Atom,RequestCode.GetProperty, tid);
-				return;
-			}
-			System.err.println("Window:"+window_id+" Property:"+pid+" Type:"+tid);
-			Window w = (Window) _ourServer.getResource(window_id);
-			System.err.println("longOffset:"+longOffset+" longLength:"+longLength+"");
-			byte		format = 0;
-			int			bytesAfter = 0;
-			byte[]		value = null;
-			boolean		generateNotify = false;
-
-			if ( _ourClient.properties.containsKey (pid)) {
-				Property	p = _ourClient.properties.get(pid);
-
-				tid = p._type;
-				format = p._format;
-
-				if (tid != 0 && tid != p._type) {
-					bytesAfter = (p._data == null) ? 0 : p._data.length;
-				} else {
-					int		n, i, t, l;
-
-					n = (p._data == null) ? 0 : p._data.length;
-					i = 4 * longOffset;
-					t = n - i;
-
-					if (longLength < 0 || longLength > 536870911)
-						longLength = 536870911;	// Prevent overflow.
-
-					if (t < longLength * 4)
-						l = t;
-					else
-						l = longLength * 4;
-
-					bytesAfter = n - (i + l);
-
-					if (l < 0) {
-						ErrorCode.write (client, ErrorCode.Value,
-													RequestCode.GetProperty, 0);
-						return;
-					}
-
-					if (l > 0) {
-						value = new byte[l];
-						System.arraycopy (p._data, i, value, 0, l);
-					}
-
-					if (delete && bytesAfter == 0) {
-						_ourClient.properties.remove (pid);
-						generateNotify = true;
-					}
-				}
-			} else {
-				tid = 0;
-			}
-
-			int			length = (value == null) ? 0 : value.length;
-			int			pad = -length & 3;
-			int			valueLength;
-
-			if (format == 8)
-				valueLength = length;
-			else if (format == 16)
-				valueLength = length / 2;
-			else if (format == 32)
-				valueLength = length / 4;
-			else
-				valueLength = 0;
-
-			synchronized (_inputOutput) {
-				Util.writeReplyHeader (client, format);
-				_inputOutput.writeInt ((length + pad) / 4);	// Reply length.
-				_inputOutput.writeInt (tid);	// Type.
-				_inputOutput.writeInt (bytesAfter);	// Bytes after.
-				_inputOutput.writeInt (valueLength);	// Value length.
-				_inputOutput.writePadBytes (12);	// Unused.
-
-				if (value != null) {
-					_inputOutput.writeBytes (value, 0, value.length);	// Value.
-					_inputOutput.writePadBytes (pad);	// Unused.
-				}
-			}
-			_inputOutput.flush ();
-
-			if (generateNotify) {
-				Vector<Client>		sc;
-				if ((sc = w.getSelectingClients (EventCode.MaskPropertyChange)) != null) {
-					for (Client c: sc)
-						EventCode.sendPropertyNotify (c, w, property,_ourServer.getTimestamp (), 1);
-				}
-			}			
-		}
-    }
-    
-    /**
-     * The XQueryExtension() function determines if the named extension is present
-     * op_code: 98
-     * 
-     * TODO: cleanup!!!
-     * TODO: names like in X documentation
-     *  
-     * @param client
-     * @param bytesRemaining
-     * @throws IOException
-     */
-    private void reqQueryExtension(Client client,int bytesRemaining) throws IOException {
-    	if (bytesRemaining < 4) {
-    		System.err.println("error in query ext data");
-    		_inputOutput.readSkip (bytesRemaining);
-    		ErrorCode.write (client, ErrorCode.Length,RequestCode.QueryExtension, 0);
-            return;
-    	}
-    	int name_length = _inputOutput.readShort ();       // Length of name.
-    	int pad = -name_length & 3;
-    	_inputOutput.readSkip (2);        // Unused.
-    	bytesRemaining -= 4;
-    	
-    	if (bytesRemaining != name_length + pad) {
-    		_inputOutput.readSkip (bytesRemaining);
-    		ErrorCode.write (client, ErrorCode.Length,RequestCode.QueryExtension, 0);
-    		return;
-    	}
-    	// read string
-    	byte[]          bytes = new byte[name_length];
-    	_inputOutput.readBytes(bytes, 0, name_length);
-    	_inputOutput.readSkip (pad);      // Unused.
-
-    	String          s = new String (bytes);
-    	System.err.println("req: QueryExtension("+s+")");
-    	Extension e =_ourServer.queryExtension(s); // ask from ApiServer (not client!)
-    	synchronized (_inputOutput) {
-            Util.writeReplyHeader (client, (byte) 0);
-            _inputOutput.writeInt (0);        // Reply length.
-            if (e == null) {
-            	_inputOutput.writeByte ((byte) 0);        // Present. 0 = false.
-            	_inputOutput.writeByte ((byte) 0);        // Major opcode.
-            	_inputOutput.writeByte ((byte) 0);        // First event.
-            	_inputOutput.writeByte ((byte) 0);        // First error.
-            } else {
-            	_inputOutput.writeByte ((byte) 1);        // Present. 1 = true.
-            	_inputOutput.writeByte (e.getMajorOpcode());   // Major opcode.
-            	_inputOutput.writeByte (e.getFirstEvent());    // First event.
-            	_inputOutput.writeByte (e.getFirstError());    // First error.
-            }
-            _inputOutput.writePadBytes (20);  // Unused.
-    	}
-    	_inputOutput.flush ();  
-    	System.err.println("rep: QueryExtension("+s+") ret:"+e);
-    }
 
     /**
      * used in Util.java
@@ -772,16 +567,14 @@ public class Client extends Thread {
     
     /**
      * used in Util.java
+     * TODO: remove
      * @return
      */
+    
     public int getSequenceNumber () {
-    	return _ourClient._sequenceNumber;
+    	return _ourServer._sequenceNumber;
     }
 
-   
-	private boolean validResourceId (int id) {
-		return ((id & ~_resourceIdMask) == _resourceIdBase && ! _ourServer.resourceExists(id) );
-	}
 
     
     /**

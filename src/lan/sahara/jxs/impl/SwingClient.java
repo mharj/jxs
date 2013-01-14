@@ -17,21 +17,19 @@ import lan.sahara.jxs.common.Window;
 
 public class SwingClient extends AbsApiClient {
 	HashMap<Integer,JFrame> windowList = new HashMap<Integer,JFrame>();
-	public SwingClient(int resourceIdBase, int resourceIdMask) {
-		super(resourceIdBase, resourceIdMask);
+	public SwingClient() {
+		super();
 		// TODO Auto-generated constructor stub
 	}
 	
 	@Override
 	public Boolean clientCreateWindow(final Window window) {
 		Rectangle geometry = window.getGeometry();
-		System.out.println("SwingClient: clientCreateWindow("+geometry.toString()+")");
 		JFrame frame = new JFrame("JXS Demo");
 		int bg_color=( window.getAttribute(Window.AttrBackgroundPixel) | 0xff000000 );
-		System.out.println("BG Color:"+new Color(bg_color).toString());
-//		frame.setBackground(new Color(bg_color));
-		frame.setBackground(Color.DARK_GRAY);
-		
+//		System.out.println("BG Color:"+new Color(bg_color).toString());
+//		frame.setBackground(Color.DARK_GRAY);
+		frame.setBackground(new Color(bg_color));
 		frame.setSize(geometry.width, geometry.height);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
@@ -48,7 +46,6 @@ public class SwingClient extends AbsApiClient {
 	@Override
 	public Boolean clientCreateGC(GContext gc) {
 		int parent_id = gc.getParentId();
-		System.out.println("SwingClient: clientCreateGC()");
 		JPanel swingGc = new JPanel();
 		swingGc.setBackground(Color.BLUE);
 		// attach to Window if we have one
