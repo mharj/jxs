@@ -3,6 +3,7 @@ package lan.sahara.jxs.impl;
 
 import java.awt.Rectangle;
 
+import lan.sahara.jxs.common.GContext;
 import lan.sahara.jxs.common.Window;
 
 public class LogClient extends AbsApiClient {
@@ -13,7 +14,13 @@ public class LogClient extends AbsApiClient {
 	}
 
 	@Override
-	public Boolean clientCreateWindow(Window window, Rectangle geometry) {
+	public Boolean clientCreateWindow(Window window) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Boolean clientCreateGC(GContext gc) {
 		// TODO Auto-generated method stub
 		return null;
 	}

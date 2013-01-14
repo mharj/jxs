@@ -27,6 +27,8 @@ public class Window extends Resource {
 	private final boolean _isRoot;
 	private boolean _isMapped = false;
 	
+	private final Rectangle _geom;
+	
 
 	private int[] _attributes;
 
@@ -88,6 +90,7 @@ public class Window extends Resource {
 		_inputOnly = inputOnly;
 		_borderWidth = borderWidth;
 		_isRoot = isRoot;
+		_geom = geom;
 		_attributes = new int[] { 0, // background-pixmap = None
 				0, // background-pixel = zero
 				0, // border-pixmap = CopyFromParent
@@ -236,6 +239,9 @@ public class Window extends Resource {
 		System.out.println("Window.setAttribute "+getAttributeName(type)+"="+value);
 		_attributes[type] = value;
 	}
+	public int getAttribute(int type) {
+		return _attributes[type];
+	}
 
 	public boolean getOverrideRedirect() {
 		return _overrideRedirect;
@@ -271,4 +277,9 @@ public class Window extends Resource {
 	public void addChildren(int window_id) {
 		_children.add(window_id);
 	}
+
+	public Rectangle getGeometry() {
+		return _geom;
+	}
+	
 }

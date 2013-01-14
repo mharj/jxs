@@ -11,6 +11,7 @@ import lan.sahara.jxs.server.XServer;
 
 public class GContext extends Resource {
 	private int[]			_attributes;
+	private int				_parent;
 	
 	public static final int	AttrFunction = 0;
 	public static final int	AttrPlaneMask = 1;
@@ -45,9 +46,10 @@ public class GContext extends Resource {
 	 * @param bytesRemaining	Bytes yet to be read in the request.
 	 * @throws IOException
 	 */	
-	public GContext(Integer resource_id,AbsApiServer ourServer,AbsApiClient ourClient) {
+	public GContext(Integer resource_id,Integer parent_id,AbsApiServer ourServer,AbsApiClient ourClient) {
 		super(Resource.GCONTEXT,resource_id,ourServer, ourClient);
 //		super(type, id, xServer);
+		_parent = parent_id;
 		_attributes = new int[] {
 				3,	// function = Copy
 				0xffffffff,	// plane-mask = all ones
@@ -75,6 +77,41 @@ public class GContext extends Resource {
 		};		
 	}
 	public void setAttribute(int maskBit,int value) {
+		System.out.println("GContext setAttribute :"+getAttributeName(maskBit)+"="+value);
 		_attributes[maskBit] = value;
+	}
+	public int getAttribute(int maskBit) {
+		return _attributes[maskBit];
+	}
+	public int getParentId() {
+		return _parent;
+	}
+	public String getAttributeName (int type) {
+		switch(type) {
+			case AttrFunction: return "AttrFunction";
+			case AttrPlaneMask: return "AttrPlaneMask";
+			case AttrForeground: return "AttrForeground";
+			case AttrBackground: return "AttrBackground";
+			case AttrLineWidth: return "AttrLineWidth";
+			case AttrLineStyle: return "AttrLineStyle";
+			case AttrCapStyle: return "AttrCapStyle";
+			case AttrJoinStyle: return "AttrJoinStyle";
+			case AttrFillStyle: return "AttrFillStyle";
+			case AttrFillRule: return "AttrFillRule";
+			case AttrTile: return "AttrTile";
+			case AttrStipple: return "AttrStipple";
+			case AttrTileStippleXOrigin: return "AttrTileStippleXOrigin";
+			case AttrTileStippleYOrigin: return "AttrTileStippleYOrigin";
+			case AttrFont: return "AttrFont";
+			case AttrSubwindowMode: return "AttrSubwindowMode";
+			case AttrGraphicsExposures: return "AttrGraphicsExposures";
+			case AttrClipXOrigin: return "AttrClipXOrigin";
+			case AttrClipYOrigin: return "AttrClipYOrigin";
+			case AttrClipMask: return "AttrClipMask";
+			case AttrDashOffset: return "AttrDashOffset";
+			case AttrDashes: return "AttrDashes";
+			case AttrArcMode: return "AttrArcMode";
+		}
+		return null;
 	}
 }

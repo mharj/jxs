@@ -13,6 +13,10 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
+
+
+
 import lan.sahara.jxs.common.CloseWindowResponse;
 import lan.sahara.jxs.common.Format;
 import lan.sahara.jxs.common.Resource;
@@ -22,6 +26,7 @@ import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.impl.LogClient;
 
 public class XServer implements Observer {
+	static Logger logger = Logger.getLogger(XServer.class.getName());	
 	private final Vector<Format> _formats; // TODO: move to "implement"
 											// class/interface
 	private final Visual _rootVisual; // TODO: move to "implement"
@@ -54,8 +59,8 @@ public class XServer implements Observer {
 	private int _clientIdBase = _clientIdStep;
 
 	public XServer(AbsApiServer outServer, int port, String windowManagerClass) throws IllegalAccessException {
+		logger.debug("constructor()");
 		outServer.addObserver(this);
-		System.err.println("Server Started");
 		_outServer = outServer;
 		_port = port;
 		_resources = new Hashtable<Integer, Resource>();
@@ -69,7 +74,7 @@ public class XServer implements Observer {
 
 	@Override
 	protected void finalize() throws Throwable {
-		System.err.println("Server Stopped");
+		logger.debug("finalize()");
 		stop();
 	}
 

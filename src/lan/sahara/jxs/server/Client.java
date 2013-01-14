@@ -7,6 +7,8 @@ import java.util.Observable;
 import java.util.Observer;
 import java.util.Vector;
 
+import org.apache.log4j.Logger;
+
 
 import lan.sahara.jxs.common.Atom;
 import lan.sahara.jxs.common.CloseWindowResponse;
@@ -22,6 +24,7 @@ import lan.sahara.jxs.impl.AbsApiClient;
 import lan.sahara.jxs.impl.AbsApiServer;
 
 public class Client extends Thread {
+	static Logger logger = Logger.getLogger(Client.class.getName());
     public static final int         Destroy = 0;
     public static final int         RetainPermanent = 1;
     public static final int         RetainTemporary = 2;
@@ -40,7 +43,7 @@ public class Client extends Thread {
     private int _closeDownMode = Destroy;	
 	
 	public Client(AbsApiServer ourServer,AbsApiClient ourClient,XServer xserver,Socket socket,int resourceIdBase,int resourceIdMask)  throws IOException {
-		System.err.println("Client thread created");
+		logger.info("constructor("+socket.getRemoteSocketAddress().toString()+")");
 		_ourServer = ourServer;
 		_ourClient = ourClient;
         _xServer = xserver;
@@ -53,7 +56,7 @@ public class Client extends Thread {
 
 	@Override
 	public void run() {
-		System.err.println("Client thread Started");
+		logger.info("run()");
 		try {
 			doComms ();
 		} catch (IOException e) {
@@ -68,6 +71,7 @@ public class Client extends Thread {
      * Close the communications thread and free resources.
      */
     private void close () {
+    	logger.info("close()");
     	if (!_isConnected)
     		return;
 
@@ -387,16 +391,13 @@ public class Client extends Thread {
 			
 			// TODO: check mask thing like in AbsApiServer.validResourceId
 			if ( _ourServer.resourceExists(window_id) ) {
-				System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") NOT VALID SOURCE");
 				_inputOutput.readSkip (bytesRemaining);
 				ErrorCode.write (this, ErrorCode.IDChoice, RequestCode.CreateWindow,window_id);
 			} else if (parent_resource == null || parent_resource.getType () != Resource.WINDOW) {
-				System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") NOT VALID SOURCE NULL or NOT WINDOW");
 				_inputOutput.readSkip (bytesRemaining);
 				ErrorCode.write (this, ErrorCode.Window, RequestCode.CreateWindow,parent_id);
 			} else {
 				try {
-					System.err.println("BYTES REMAINING:"+bytesRemaining);
 					Window parent_window = (Window) parent_resource;
 					Rectangle geom = new Rectangle();
 					geom.x = _inputOutput.readShort ();	// X position.
@@ -404,90 +405,79 @@ public class Client extends Thread {
 					geom.width = _inputOutput.readShort ();	// W size.
 					geom.height =  _inputOutput.readShort ();	// H size.
 					bytesRemaining -= 8;
-					System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") GEOM POS AND SIZE ok "+geom.toString()+", BYTES REMAINING:"+bytesRemaining);
 					int				borderWidth = _inputOutput.readShort ();	// Border width.
 					bytesRemaining -= 2;
-					System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") GEOM borderWidth, BYTES REMAINING:"+bytesRemaining);
 					int				wclass = _inputOutput.readShort ();	// Window class.
 					bytesRemaining -= 2;
-					System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") GEOM Window class, BYTES REMAINING:"+bytesRemaining);
 					int visual = _inputOutput.readInt ();	// Visual.
 					bytesRemaining -= 4;
-					System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") GEOM visual, BYTES REMAINING:"+bytesRemaining);
-				
-//				bytesRemaining -= 16;
-				boolean			inputOnly;
-				if (wclass == 0)	// Copy from parent.
-					inputOnly = parent_window.isInputOnly();
-				else if (wclass == 1)	// Input/output.
-					inputOnly = false;
-				else
-					inputOnly = true;
-				// create window
-				System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") CREATE Window()");
-				Window			w = null;
-				try {
-					w = new Window (window_id,_ourServer,_ourClient,parent_window,geom,borderWidth,inputOnly,false);
-				} catch (OutOfMemoryError e) {
-					_inputOutput.readSkip (bytesRemaining);
-					ErrorCode.write (client, ErrorCode.Alloc,RequestCode.CreateWindow, 0);
-					return;
-				}
 
-				if (bytesRemaining < 4) {
-					_inputOutput.readSkip (bytesRemaining);
-					ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateWindow, 0);
-					return;
-				}
-
-				int			valueMask = _inputOutput.readInt ();	// Value mask.
-				bytesRemaining -= 4;
-				System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") valueMask, BYTES REMAINING:"+bytesRemaining);
-				int			n = Util.bitcount (valueMask);
-
-				
-				if (bytesRemaining != n * 4) {
-					_inputOutput.readSkip (bytesRemaining);
-					ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateWindow, 0);
-					return;
-				}
-				System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") value-list size:"+(n*4)+"");
-				for (int i = 0; i < 15; i++) {
-					if ((valueMask & (1 << i)) != 0) {
-						System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") Value Type:"+i);
-						switch (i) {
-							case Window.AttrBackgroundPixmap:
-							case Window.AttrBackgroundPixel:
-							case Window.AttrBorderPixmap:
-							case Window.AttrBorderPixel:
-							case Window.AttrBackingPlanes:
-							case Window.AttrBackingPixel:
-							case Window.AttrEventMask:
-							case Window.AttrDoNotPropagateMask:
-							case Window.AttrColormap:
-							case Window.AttrCursor:
-								w.setAttribute(i, _inputOutput.readInt() );
-								break;
-							case Window.AttrBitGravity:
-							case Window.AttrWinGravity:
-							case Window.AttrBackingStore:
-							case Window.AttrOverrideRedirect:
-							case Window.AttrSaveUnder:
-								w.setAttribute(i, _inputOutput.readByte() );
-								_inputOutput.readSkip (3);
-								break;
+					boolean			inputOnly;
+					if (wclass == 0)	// Copy from parent.
+						inputOnly = parent_window.isInputOnly();
+					else if (wclass == 1)	// Input/output.
+						inputOnly = false;
+					else
+						inputOnly = true;
+					// create window
+					Window			w = null;
+					try {
+						w = new Window (window_id,_ourServer,_ourClient,parent_window,geom,borderWidth,inputOnly,false);
+					} catch (OutOfMemoryError e) {
+						_inputOutput.readSkip (bytesRemaining);
+						ErrorCode.write (client, ErrorCode.Alloc,RequestCode.CreateWindow, 0);
+						return;
+					}
+					if (bytesRemaining < 4) {
+						_inputOutput.readSkip (bytesRemaining);
+						ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateWindow, 0);
+						return;
+					}
+					int			valueMask = _inputOutput.readInt ();	// Value mask.
+					bytesRemaining -= 4;
+					int			n = Util.bitcount (valueMask);
+					if (bytesRemaining != n * 4) {
+						_inputOutput.readSkip (bytesRemaining);
+						ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateWindow, 0);
+						return;
+					}
+					for (int i = 0; i < 15; i++) {
+						if ((valueMask & (1 << i)) != 0) {
+							System.err.println("req: CreateWindow(ID:"+window_id+" Parent:"+parent_id+") Value Type:"+i);
+							switch (i) {
+								case Window.AttrBackgroundPixmap:
+								case Window.AttrBackgroundPixel:
+								case Window.AttrBorderPixmap:
+								case Window.AttrBorderPixel:
+								case Window.AttrBackingPlanes:
+								case Window.AttrBackingPixel:
+								case Window.AttrEventMask:
+								case Window.AttrDoNotPropagateMask:
+								case Window.AttrColormap:
+								case Window.AttrCursor:
+									w.setAttribute(i, _inputOutput.readInt() );
+									break;
+								case Window.AttrBitGravity:
+								case Window.AttrWinGravity:
+								case Window.AttrBackingStore:
+								case Window.AttrOverrideRedirect:
+								case Window.AttrSaveUnder:
+									w.setAttribute(i, _inputOutput.readByte() );
+									_inputOutput.readSkip (3);
+									break;
+							}
 						}
 					}
-				}
-				valueMask = 0xffffffff; // for new window
+					valueMask = 0xffffffff; // for new window
 				
-				w.applyValues (client, RequestCode.CreateWindow, valueMask);
+					w.applyValues (client, RequestCode.CreateWindow, valueMask);
 				
-				_ourServer.addResource(w);
-				parent_window.addChildren(window_id);
+					_ourServer.addResource(w);
+					_ourClient.addResource(w);
+					parent_window.addChildren(window_id);
 				
-				// push to client api
-				_ourClient.clientCreateWindow(w,geom);
+					// push to client api
+//					_ourClient.clientCreateWindow(w,geom);
 /*
 				
 					return false;
@@ -498,15 +488,15 @@ public class Client extends Thread {
 				client.addResource (w);
 				_children.add (w);
 */
-				// TODO fix getSelectingClients and w.applyValues !!!
-				EventCode.sendCreateNotify (this, parent_window, w, geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
+					// TODO fix getSelectingClients and w.applyValues !!!
+					EventCode.sendCreateNotify (this, parent_window, w, geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
 				
-				Vector<Client>		sc = w.getSelectingClients (EventCode.MaskSubstructureNotify);
-				if (sc != null) {
-					for (Client c: sc) {
-						EventCode.sendCreateNotify (c, parent_window, w,geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
+					Vector<Client>		sc = w.getSelectingClients (EventCode.MaskSubstructureNotify);
+					if (sc != null) {
+						for (Client c: sc) {
+							EventCode.sendCreateNotify (c, parent_window, w,geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
+						}
 					}
-				}
 				
 				} catch (IOException e ) {
 					System.err.println("Caught IOException: " + e.getMessage());
@@ -531,11 +521,8 @@ public class Client extends Thread {
         } else {
             int	cid = 	 _inputOutput.readInt ();  		 // GContext ID.
             int	drawable = _inputOutput.readInt ();		 // Drawable ID.
-            
             bytesRemaining -= 8;
             System.err.println("req: CreateGC(ID:"+cid+" Parent:"+drawable+")");
-            
-            
             Resource r = _ourServer.getResource (drawable);
             if (! _ourServer.validResourceId (cid,_ourClient) ) {
             	_inputOutput.readSkip (bytesRemaining);
@@ -545,15 +532,64 @@ public class Client extends Thread {
                 _inputOutput.readSkip (bytesRemaining);
                 ErrorCode.write (this, ErrorCode.Drawable, RequestCode.CreateGC, drawable);            	
             } else {
-            	GContext gc = new GContext(cid, _ourServer,_ourClient);
-            	if ( processGCValues(gc,bytesRemaining) == true ) {
-            		_ourServer.addResource(gc);
-            		
-//					TODO: client should not care?            		
-//            		_ourClient.addResource(gc); 	
-            	} else {
-            		System.err.println("Error in parsing!");
-            	}
+            	GContext gc = new GContext(cid,drawable,_ourServer,_ourClient);
+                if (bytesRemaining < 4) {
+                	_inputOutput.readSkip (bytesRemaining);
+                    ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateGC, 0);
+                    return;
+                }
+                // read mask
+                int valueMask = _inputOutput.readInt ();      // Value mask.
+            	int n = Util.bitcount (valueMask);
+            	bytesRemaining -= 4;
+                if (bytesRemaining != n * 4) {
+                	_inputOutput.readSkip (bytesRemaining);
+                	ErrorCode.write (client, ErrorCode.Length, RequestCode.CreateGC, 0);
+                    return;
+                }
+                // loop values
+                for (int i = 0; i < 23; i++) {
+                    if ((valueMask & (1 << i)) != 0) {
+                    	switch (i) {
+                        	case GContext.AttrFunction:
+                        	case GContext.AttrLineStyle:
+                        	case GContext.AttrCapStyle:
+                        	case GContext.AttrJoinStyle:
+                        	case GContext.AttrFillStyle:
+                        	case GContext.AttrFillRule:
+                        	case GContext.AttrSubwindowMode:
+                        	case GContext.AttrGraphicsExposures:
+                        	case GContext.AttrDashes:
+                        	case GContext.AttrArcMode:
+                        		gc.setAttribute(i, _inputOutput.readByte () );
+                        		_inputOutput.readSkip (3);
+                        		break;
+                        	case GContext.AttrPlaneMask:
+                        	case GContext.AttrForeground:
+                        	case GContext.AttrBackground:
+                        	case GContext.AttrTile:
+                        	case GContext.AttrStipple:
+                        	case GContext.AttrFont:
+                        	case GContext.AttrClipMask:
+                        		gc.setAttribute(i, _inputOutput.readInt () );
+                                break;
+                        	case GContext.AttrLineWidth:
+                        	case GContext.AttrDashOffset:
+                        		gc.setAttribute(i, _inputOutput.readShort () );
+                        		_inputOutput.readSkip (2);
+                                break;
+                        	case GContext.AttrTileStippleXOrigin:
+                        	case GContext.AttrTileStippleYOrigin:
+                        	case GContext.AttrClipXOrigin:
+                        	case GContext.AttrClipYOrigin:
+                        		gc.setAttribute(i, (short) _inputOutput.readShort () );
+                        		_inputOutput.readSkip (2);
+                                break;
+                    	}
+                    }
+                }
+                _ourServer.addResource(gc);
+        		_ourClient.addResource(gc);
             }
         }    	
     }

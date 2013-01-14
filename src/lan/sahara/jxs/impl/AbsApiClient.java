@@ -5,7 +5,9 @@ import java.util.Observable;
 
 import lan.sahara.jxs.common.CloseWindowResponse;
 import lan.sahara.jxs.common.EventCode;
+import lan.sahara.jxs.common.GContext;
 import lan.sahara.jxs.common.Property;
+import lan.sahara.jxs.common.Resource;
 import lan.sahara.jxs.common.Window;
 
 
@@ -13,7 +15,7 @@ public abstract class AbsApiClient extends Observable implements InterfaceApiCli
 	public int _sequenceNumber = 0;
 	public final Hashtable<Integer, Property> properties = new Hashtable<Integer, Property>();
     private final int _resourceIdBase;
-    private final int  _resourceIdMask;
+    private final int _resourceIdMask;
 	public AbsApiClient(int resourceIdBase,int resourceIdMask) {
 		_resourceIdBase = resourceIdBase;
 		_resourceIdMask = resourceIdMask;
@@ -33,5 +35,15 @@ public abstract class AbsApiClient extends Observable implements InterfaceApiCli
 		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
 		setChanged();
 		notifyObservers(new CloseWindowResponse(EventCode.DestroyNotify,window));
+	}
+	public void addResource(Resource resource) {
+		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
+		if (resource instanceof Window ) {
+			clientCreateWindow((Window)resource);
+		}
+		if (resource instanceof GContext ) {
+			clientCreateGC((GContext)resource);
+		}
+		
 	}
 }
