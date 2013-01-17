@@ -12,8 +12,6 @@ import lan.sahara.jxs.common.Window;
 
 
 public abstract class AbsApiClient extends Observable implements InterfaceApiClient {
-
-	public final Hashtable<Integer, Property> properties = new Hashtable<Integer, Property>();
 	/**
 	 * Notify Api Server that Resource is closing (Window)
 	 * @param window

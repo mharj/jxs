@@ -17,7 +17,7 @@ import lan.sahara.jxs.server.InputOutput;
 import lan.sahara.jxs.server.Util;
 
 public class GetProperty {
-	public static void query(byte delete, int bytesRemaining, InputOutput inputOutput,int sequenceNumber,AbsApiServer ourServer,Hashtable<Integer, Property> properties) throws IOException {
+	public static void query(byte delete, int bytesRemaining, InputOutput inputOutput,int sequenceNumber,AbsApiServer ourServer) throws IOException {
 		System.err.print("Request: GetProperty ");
 		if (bytesRemaining  != 20 ) {
 			inputOutput.readSkip (bytesRemaining);
@@ -47,6 +47,7 @@ public class GetProperty {
 			ErrorCode.write (inputOutput,sequenceNumber, ErrorCode.Window,RequestCode.GetProperty, window_id);
 			return;
 		}
+		Hashtable<Integer, Property> properties = window.getProperties();
 		// TODO: learn what this is doing
 		byte		format = 0;
 		int			bytesAfter = 0;

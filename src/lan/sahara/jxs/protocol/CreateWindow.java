@@ -1,26 +1,34 @@
 package lan.sahara.jxs.protocol;
 
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.io.IOException;
+import java.util.Set;
+import java.util.Vector;
+
 
 
 import lan.sahara.jxs.common.ErrorCode;
+import lan.sahara.jxs.common.EventCode;
+import lan.sahara.jxs.common.Pixmap;
 import lan.sahara.jxs.common.RequestCode;
 import lan.sahara.jxs.common.Resource;
 import lan.sahara.jxs.common.Window;
 import lan.sahara.jxs.impl.AbsApiServer;
+import lan.sahara.jxs.server.Client;
 import lan.sahara.jxs.server.InputOutput;
 import lan.sahara.jxs.server.Util;
 
 public class CreateWindow {
 	public static Window query(byte unused, int bytesRemaining, InputOutput inputOutput, int sequenceNumber, AbsApiServer ourServer) throws IOException {
+		System.err.print("Request: CreateWindow ");
 		Window w = null;
 		int id = inputOutput.readInt(); // Window ID.
 		int parent = inputOutput.readInt(); // Parent.
 		bytesRemaining -= 8;
+		System.err.println("(Window:"+id+" Parent:"+parent+")");
 		Resource r = ourServer.getResource(parent);
-		bytesRemaining -= 8;
-		if (!ourServer.validResourceId(id)) {
+		if (! ourServer.validResourceId(id)) {
 			inputOutput.readSkip(bytesRemaining);
 			ErrorCode.write(inputOutput, sequenceNumber, ErrorCode.IDChoice, RequestCode.CreateWindow, id);
 		} else if (r == null || r.getType() != Resource.WINDOW) {
@@ -46,6 +54,7 @@ public class CreateWindow {
 				inputOnly = true;
 
 			try {
+				System.err.println("Request: CreateWindow (Window:"+id+" Parent:"+parent+")");
 				// Window(Integer resource_id,Window parent, Rectangle geom, int borderWidth, boolean inputOnly, boolean isRoot)
 				w = new Window(id, parent_window, new Rectangle(x,y,width,height) , borderWidth, inputOnly, false);
 			} catch (OutOfMemoryError e) {
@@ -53,7 +62,7 @@ public class CreateWindow {
 				ErrorCode.write(inputOutput, sequenceNumber, ErrorCode.Alloc, RequestCode.CreateWindow, 0);
 				return null;
 			}
-
+			// process Window Attributes
 			if (bytesRemaining < 4) {
 				inputOutput.readSkip (bytesRemaining);
 				ErrorCode.write (inputOutput, sequenceNumber, ErrorCode.Length, RequestCode.CreateWindow, 0);
@@ -94,17 +103,23 @@ public class CreateWindow {
 				}
 			}
 			valueMask = 0xffffffff; // for new window
-		
-			// TODO: fill rest!!!
-			ERROR
-			ERROR
-			// TODO: fill rest!!!
-
 		}
 		return w;
 	}
 
-	public static void reply(Window w, InputOutput inputOutput, int sequenceNumber) throws IOException {
+	public static void reply(Window w,Window parent_window, InputOutput inputOutput, int sequenceNumber) throws IOException {
+		System.out.println("Reply: CreateWindow");
+		Rectangle geom = w.getGeometry();
+		EventCode.sendCreateNotify (inputOutput,sequenceNumber, parent_window, w, geom.x, geom.y, geom.width, geom.height,w.getAttribute(Window.AttrBorderPixel), w.getOverrideRedirect());
 
+		// TODO fix getSelectingClients (TCP clients) and w.applyValues !!!
+	/*	
+		Vector<Client>		sc = w.getSelectingClients (EventCode.MaskSubstructureNotify);
+		if (sc != null) {
+			for (Client c: sc) {
+				EventCode.sendCreateNotify (c, parent_window, w,geom.x, geom.y, geom.width, geom.height,borderWidth, w.getOverrideRedirect());
+			}
+		}
+*/		
 	}
 }

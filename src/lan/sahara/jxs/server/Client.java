@@ -22,8 +22,12 @@ import lan.sahara.jxs.common.Resource;
 import lan.sahara.jxs.common.Window;
 import lan.sahara.jxs.impl.AbsApiClient;
 import lan.sahara.jxs.impl.AbsApiServer;
+import lan.sahara.jxs.protocol.ChangeWindowAttributes;
 import lan.sahara.jxs.protocol.CreateGC;
+import lan.sahara.jxs.protocol.CreateWindow;
 import lan.sahara.jxs.protocol.GetProperty;
+import lan.sahara.jxs.protocol.InternAtom;
+import lan.sahara.jxs.protocol.MapWindow;
 import lan.sahara.jxs.protocol.QueryExtension;
 
 public class Client extends Thread {
@@ -177,14 +181,14 @@ public class Client extends Thread {
             		requestLength = _inputOutput.readInt ();
 
             	// Deal with server grabs.
-/*            	
+           	
             	while (!_xServer.processingAllowed (this)) {
             		try {
             			sleep (100);
             		} catch (InterruptedException e) {
             		}
             	}
-*/
+
             	synchronized (_xServer) {
             		processRequest (opcode, arg, requestLength * 4 - 4);
             	}
@@ -203,14 +207,28 @@ public class Client extends Thread {
     private void processRequest (byte opcode,byte arg,int bytesRemaining) throws IOException {
     		_ourServer._sequenceNumber++;
             switch (opcode) {
-                    case RequestCode.CreateWindow:reqCreateWindow(this,bytesRemaining);break;
-                    case RequestCode.ChangeWindowAttributes:reqChangeWindowAttributes(this,bytesRemaining);break;
+                    case RequestCode.CreateWindow:
+                    		Window window = CreateWindow.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+                    		if ( window != null) {
+                    			_ourServer.addResource(window);
+                    			_ourClient.addResource(window);
+                    			CreateWindow.reply(window, window.getParent(), _inputOutput, _ourServer._sequenceNumber);
+                    		}
+//                    		reqCreateWindow(this,bytesRemaining);
+                    	break;
+                    case RequestCode.ChangeWindowAttributes:
+                    	ChangeWindowAttributes.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+//                    	reqChangeWindowAttributes(this,bytesRemaining);
+                    	break;
                     case RequestCode.GetWindowAttributes:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.DestroyWindow:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.DestroySubwindows:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.ChangeSaveSet:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.ReparentWindow:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.MapWindow:reqMapWindow(this,bytesRemaining);break;
+                    case RequestCode.MapWindow:
+                    		MapWindow.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+//                    		reqMapWindow(this,bytesRemaining);
+                    		break;
                     case RequestCode.MapSubwindows:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.UnmapWindow:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.UnmapSubwindows:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -220,7 +238,7 @@ public class Client extends Thread {
                     case RequestCode.ChangeProperty:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.DeleteProperty:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.GetProperty:
-                    	GetProperty.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer, _ourClient.properties);
+                    	GetProperty.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
                     	break;
                     case RequestCode.ListProperties:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryPointer:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -247,7 +265,12 @@ public class Client extends Thread {
                     case RequestCode.ImageText8:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.ImageText16:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryBestSize:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.InternAtom:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
+                    case RequestCode.InternAtom:
+                    	Integer atomId = InternAtom.query(arg, bytesRemaining, _inputOutput,_ourServer._sequenceNumber,_ourServer);
+                    	if ( atomId != null ) {
+                    		InternAtom.reply(atomId, arg, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+                    	}
+                    break;
                     case RequestCode.GetAtomName:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.GetSelectionOwner:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.SetSelectionOwner:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;

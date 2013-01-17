@@ -26,7 +26,10 @@ import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.impl.LogClient;
 
 public class XServer implements Observer {
-	static Logger logger = Logger.getLogger(XServer.class.getName());	
+	static Logger logger = Logger.getLogger(XServer.class.getName());
+	
+	private Client				_grabClient;
+	
 	private final Vector<Format> _formats; // TODO: move to "implement"
 											// class/interface
 	private final Visual _rootVisual; // TODO: move to "implement"
@@ -256,5 +259,10 @@ public class XServer implements Observer {
         }
 		
 	}
-
+	
+	public boolean processingAllowed (Client client) {
+		if (_grabClient == null)
+			return true;
+		return _grabClient == client;
+	}
 }

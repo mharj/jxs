@@ -1,5 +1,6 @@
 package lan.sahara.jxs.common;
 
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.io.IOException;
 import java.util.HashSet;
@@ -15,7 +16,7 @@ import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.server.Client;
 
 public class Window extends Resource {
-
+	private Image _backgroundBitmap = null;
 	private Window _parent;	
 	private int _eventMask = 0;
 	private final Hashtable<Client, Integer> _clientMasks;
@@ -273,5 +274,30 @@ public class Window extends Resource {
 	public Rectangle getGeometry() {
 		return _geom;
 	}
-	
+	public void setBackgroundBitmap(Image backgroundBitmap) {
+		_backgroundBitmap = backgroundBitmap;
+	}
+	public Image getBackgroundBitmap() {
+		return _backgroundBitmap;
+	}
+
+	public void setBackgroundColor(int attribute) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Window getParent() {
+		return _parent;
+	}
+
+	public void setMap(boolean isMapped) {
+		_isMapped = isMapped;
+	}
+	public boolean getMap() {
+		return _isMapped;
+	}
+
+	public Hashtable<Integer, Property> getProperties() {
+		return _properties;
+	}
 }

@@ -654,6 +654,22 @@ public class EventCode {
 		io.flush();
 	}
 
+	public static void sendCreateNotify(InputOutput inputOutput, int sequenceNumber, Window parent, Window window, int x, int y, int width, int height, int borderWidth, boolean overrideRedirect) throws IOException {
+		synchronized (inputOutput) {
+			writeHeader(inputOutput,sequenceNumber, CreateNotify, 0);
+			inputOutput.writeInt(parent.getId()); // Parent.
+			inputOutput.writeInt(window.getId()); // Window.
+			inputOutput.writeShort((short) x); // X.
+			inputOutput.writeShort((short) y); // Y.
+			inputOutput.writeShort((short) width); // Width.
+			inputOutput.writeShort((short) height); // Height.
+			inputOutput.writeShort((short) borderWidth); // Border width.
+			inputOutput.writeByte((byte) (overrideRedirect ? 1 : 0));
+			inputOutput.writePadBytes(9); // Unused.
+		}
+		inputOutput.flush();
+	}	
+	
 	/**
 	 * Send a destroy notify event.
 	 * 
