@@ -300,4 +300,8 @@ public class Window extends Resource {
 	public Hashtable<Integer, Property> getProperties() {
 		return _properties;
 	}
+
+	public boolean isRoot() {
+		return _isRoot;
+	}
 }

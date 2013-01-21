@@ -7,9 +7,9 @@ public class ResourceManager {
 	private static ConcurrentHashMap<Integer,Resource> resourceMap = new ConcurrentHashMap<Integer,Resource>();
 	private static ConcurrentHashMap<Resource,Integer> resourceReverseMap = new ConcurrentHashMap<Resource,Integer>();
 	
-	public Boolean addResource(final Resource r) {
+	public Integer addResource(final Resource r) {
+		Integer resource_id = r.getId();
 		synchronized (this) {
-			Integer resource_id = r.getId();
 			if ( r.getId() == null )
 				resource_id = firstFree;
 				
@@ -27,7 +27,7 @@ public class ResourceManager {
 				}
 			}
 		}
-		return true;
+		return resource_id;
 	}
 	public Resource get(int resource_id) {
 		return resourceMap.get(resource_id);

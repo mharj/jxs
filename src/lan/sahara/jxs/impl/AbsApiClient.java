@@ -32,4 +32,11 @@ public abstract class AbsApiClient extends Observable implements InterfaceApiCli
 		}
 		
 	}
+	public void freeResource(Integer id) {
+		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName()+" ID:"+id);
+		clientFreeResource(id);
+	}
+	public int getInputFocus() {
+		return clientGetInputFocus();
+	}
 }

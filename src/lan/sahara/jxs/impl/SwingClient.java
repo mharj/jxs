@@ -6,6 +6,9 @@ import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextLayout;
+import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 
 import javax.swing.BorderFactory;
@@ -90,4 +93,17 @@ public class SwingClient extends AbsApiClient {
 	        g.drawString("This is my custom Panel!",10,20);
 	    }  
 	}
+	@Override
+	public Boolean clientFreeResource(Integer id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int clientGetInputFocus() {
+		// TODO return current focus window
+		return 0;
+	}
+
+
 }

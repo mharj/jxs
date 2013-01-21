@@ -25,4 +25,15 @@ public class LogClient extends AbsApiClient {
 		return null;
 	}
 
+	@Override
+	public Boolean clientFreeResource(Integer id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int clientGetInputFocus() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

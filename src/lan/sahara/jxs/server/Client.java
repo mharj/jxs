@@ -12,10 +12,13 @@ import org.apache.log4j.Logger;
 
 import lan.sahara.jxs.common.Atom;
 import lan.sahara.jxs.common.CloseWindowResponse;
+import lan.sahara.jxs.common.Cursor;
 import lan.sahara.jxs.common.ErrorCode;
 import lan.sahara.jxs.common.EventCode;
 import lan.sahara.jxs.common.Extension;
+import lan.sahara.jxs.common.Font;
 import lan.sahara.jxs.common.GContext;
+import lan.sahara.jxs.common.Pixmap;
 import lan.sahara.jxs.common.Property;
 import lan.sahara.jxs.common.RequestCode;
 import lan.sahara.jxs.common.Resource;
@@ -24,10 +27,15 @@ import lan.sahara.jxs.impl.AbsApiClient;
 import lan.sahara.jxs.impl.AbsApiServer;
 import lan.sahara.jxs.protocol.ChangeWindowAttributes;
 import lan.sahara.jxs.protocol.CreateGC;
+import lan.sahara.jxs.protocol.CreateGlyphCursor;
+import lan.sahara.jxs.protocol.CreatePixmap;
 import lan.sahara.jxs.protocol.CreateWindow;
+import lan.sahara.jxs.protocol.FreePixmap;
+import lan.sahara.jxs.protocol.GetInputFocus;
 import lan.sahara.jxs.protocol.GetProperty;
 import lan.sahara.jxs.protocol.InternAtom;
 import lan.sahara.jxs.protocol.MapWindow;
+import lan.sahara.jxs.protocol.OpenFont;
 import lan.sahara.jxs.protocol.QueryExtension;
 
 public class Client extends Thread {
@@ -287,7 +295,13 @@ public class Client extends Thread {
                     case RequestCode.UngrabKey:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.AllowEvents:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.SetInputFocus:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.GetInputFocus:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
+                    case RequestCode.GetInputFocus:
+                    	Integer focus_id = GetInputFocus.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourClient, _ourServer);
+                    	if ( focus_id != null ) {
+                    		GetInputFocus.reply(focus_id, _ourServer._focusRevertTo, _inputOutput, _ourServer._sequenceNumber);
+                    	}
+//                    	System.err.println("op_code:"+opcode+" size:"+bytesRemaining);
+                    	break;
                     case RequestCode.GrabServer:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.UngrabServer:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.WarpPointer:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -295,7 +309,14 @@ public class Client extends Thread {
                     case RequestCode.GetPointerControl:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.SetPointerMapping:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.GetPointerMapping:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.OpenFont:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
+                    case RequestCode.OpenFont:
+                    	Font font = OpenFont.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+                    	if ( font != null ) {
+                    		_ourServer.addResource(font);
+                    		_ourClient.addResource(font);         		
+                    	}
+                    	//System.err.println("op_code:"+opcode+" size:"+bytesRemaining);
+                    	break;
                     case RequestCode.CloseFont:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryFont:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryTextExtents:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
@@ -303,8 +324,22 @@ public class Client extends Thread {
                     case RequestCode.ListFontsWithInfo:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.SetFontPath:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.GetFontPath:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.CreatePixmap:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.FreePixmap:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
+                    case RequestCode.CreatePixmap:
+                    	Pixmap pixmap = CreatePixmap.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+                    	if ( pixmap != null ) {
+                    		_ourServer.addResource(pixmap);
+                    		_ourClient.addResource(pixmap);                    		
+                    	}
+//                    	System.err.println("op_code:"+opcode+" size:"+bytesRemaining);
+                    	break;
+                    case RequestCode.FreePixmap:
+                    	Integer id = FreePixmap.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+                    	if ( id != null ) {
+                    		_ourServer.freeResource(id);
+                    		_ourClient.freeResource(id);
+                    	}
+                    	// System.err.println("op_code:"+opcode+" size:"+bytesRemaining);
+                    	break;
                     case RequestCode.CreateGC:
                     	GContext gcontext = CreateGC.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer, _ourClient);
                     	if ( gcontext != null) {
@@ -333,7 +368,13 @@ public class Client extends Thread {
                     case RequestCode.QueryColors:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.LookupColor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.CreateCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
-                    case RequestCode.CreateGlyphCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
+                    case RequestCode.CreateGlyphCursor:
+                    	Cursor cursor = CreateGlyphCursor.query(arg, bytesRemaining, _inputOutput, _ourServer._sequenceNumber, _ourServer);
+                    	if ( cursor != null) {
+                    		_ourServer.addResource(cursor);
+                    		_ourClient.addResource(cursor);
+                    	}
+                    	break;
                     case RequestCode.FreeCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.RecolorCursor:System.err.println("op_code:"+opcode+" size:"+bytesRemaining);break;
                     case RequestCode.QueryExtension:

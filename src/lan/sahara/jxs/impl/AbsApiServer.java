@@ -18,6 +18,8 @@ import lan.sahara.jxs.common.Window;
 
 @SuppressWarnings("unused")
 public abstract class AbsApiServer extends Observable implements InterfaceApiServer,Observer  {
+	public byte		_focusRevertTo = 0;	// 0=None, 1=Root, 2=Parent.	
+	private Integer _rootId = null;
 	public int _sequenceNumber = 0;
 	public Integer				_resourceIdBase = null;
 	public Integer				_resourceIdMask = null;	
@@ -123,6 +125,7 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 	}
 	// resource methods
 	public void freeResource(int id) {
+		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName()+" ID:"+id);		
 		resourceMgmr.remove (id);
 	}
 
@@ -132,7 +135,10 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
 	
 	public void addResource(Resource resource) {
 		System.err.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName()+" ID:"+resource.getId());
-		resourceMgmr.addResource(resource);
+		// store root window id
+		Integer id = resourceMgmr.addResource(resource);
+		if ( resource.getType() == Resource.WINDOW && ((Window)resource).isRoot() == true ) 
+			_rootId = id;
 	}
 	public Integer getResourceId(Resource resource) {
 		return resourceMgmr.getId(resource);
@@ -153,4 +159,9 @@ public abstract class AbsApiServer extends Observable implements InterfaceApiSer
     		notifyObservers(arg);            
         }
     }
+
+	public Integer getRootId() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

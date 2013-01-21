@@ -1,16 +1,26 @@
 package lan.sahara.jxs.impl;
 
+import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
+import java.awt.font.FontRenderContext;
+import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
+import java.awt.geom.Rectangle2D;
+import java.util.Map.Entry;
 
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import lan.sahara.jxs.common.Extension;
-import lan.sahara.jxs.common.Font;
+
 
 public class SwingServer extends AbsApiServer {
-
+//	static Dimension screenSize=Toolkit.getDefaultToolkit().getScreenSize();
+	private Font systemFont = null; 
+	
 	@Override
 	public AbsApiClient createClient() {
 //		System.out.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
@@ -49,9 +59,33 @@ public class SwingServer extends AbsApiServer {
 	}
 
 	@Override
-	public Font getDefaultFont() {
+	public lan.sahara.jxs.common.Font getDefaultFont() {
 		System.out.println(""+this.getClass().getName()+"."+Thread.currentThread().getStackTrace()[1].getMethodName());
-		return new Font(null,"");
+		systemFont = new Font( "Monospaced", Font.PLAIN, 12 );
+		lan.sahara.jxs.common.Font ret = new lan.sahara.jxs.common.Font(null,toX11Font(systemFont));
+		FontRenderContext frc = new FontRenderContext(systemFont.getTransform(), true, true);
+		Rectangle2D bounds =  new TextLayout("AAAA", systemFont, frc).getBounds();
+		System.out.println(bounds.toString());
+		bounds =  new TextLayout(".", systemFont, frc).getBounds();
+		System.out.println(bounds.toString());
+		return ret;
 	}
-
+	private String toX11Font(Font f) {
+		String ret="";
+		ret+="-swing";
+		ret+="-"+f.getName().toLowerCase();
+		ret+="-"+(f.isPlain()?"medium":"bold");
+		ret+="-"+(f.isItalic()?"i":"r");
+		ret+="-normal";
+		ret+="-*";
+		ret+="-*";
+		ret+="-"+f.getSize();
+		ret+="-*";
+		ret+="-*";
+		ret+="-"+(f.getName().toLowerCase().contains("mono")?"m":"p");
+		ret+="-*";
+		ret+="-iso8859";
+		ret+="-1";
+		return ret;
+	}
 }
